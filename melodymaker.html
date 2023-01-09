@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Melody Maker</title>
+</head>
+<body onload="bodyReady()">
+
+<canvas id="myCanvas" width="100%" height="50%">
+
+
+
+</canvas>
+
+<div id="PlayButton" class="Button icon-svg_play"></div>
+<button onclick="play()" type="button">Play</button>
+
+
+
+
+ <script src="Tone.js"></script>
+
+<script >
+
+var onOff= [];
+
+function bodyReady() {
+	canvas= document.getElementById("myCanvas");
+
+	var ctx= canvas.getContext("2d");
+	canvas.width  = window.innerWidth;
+	canvas.height = window.innerHeight*0.9;
+	var height= canvas.height;
+	var width= canvas.width;
+	var rows= 36;
+	var columns= 36;
+	for (var i = 0; i < columns; i++) {
+		
+		onOff.push(Array(rows).fill(false));
+	}
+	canvas.addEventListener('click', function(e) { 
+		//console.log(e);
+		var x= e.x;
+		var y= e.y;
+
+		var coord= clickConverter(x,y,height, width, rows, columns);
+		boxX= coord[0];
+		boxY= coord[1];
+		console.log(boxX, boxY);
+		 notes= ["C4","C#4","D4","D#4","E4","E#4","F#4", "G4", "G#4", "A4", "A#4", "B4", "C5", "C#5","D5","D#5","E5","E#5","F#5", "G5", "G#5", "A5", "A#5", "B5", "C6", "C#6","D6","D#6","E6","E#6","F#6", "G6", "G#6", "A6", "A#6", "B6"];
+		synths= [];
+		for (var i = 0; i < notes.length; i++) {
+			synths[i]= new Tone.Synth().toMaster();
+		}
+		 
+		playSound(boxY);
+		onOff[boxX][boxY]=!onOff[boxX][boxY];
+		drawGrid(rows,columns,width, height, ctx, onOff);
+
+	}, false);
+
+	drawGrid(rows,columns,width, height, ctx, onOff);
+
+
+
+
+}
+
+
+/*var playButton = document.getElementById("play_button");
+
+playButton.addEventListener("click", function() {
+  if (video.paused == true) {
+    
+    video.play();
+
+    
+    playButton.innerHTML = "Pause";
+  } else {
+    
+    video.pause();
+
+    
+    playButton.innerHTML = "Play";
+  }
+});
+
+*/
+
+//var synth = new Tone.Synth().toMaster();
+
+//synth.triggerAttackRelease("D4", "8n");
+
+
+function playSound(index) {
+	console.log(notes[index%notes.length]);
+	synths[index%synths.length].triggerAttackRelease(notes[index%notes.length], "8t");
+
+
+
+
+}
+
+//function stopPlaying(){
+
+	
+//}
+
+function randomR(seed) {
+    var x = Math.sin(seed) * 10000;
+    return x - Math.floor(x);
+}
+
+function randomG(seed) {
+    var x = Math.cos(seed) * 10000;
+    return x - Math.floor(x);
+}
+
+function randomB(seed) {
+    var x = Math.tan(seed) * 10000;
+    return x - Math.floor(x);
+}
+
+function colors(y) {
+
+	var remainder= y%12; 
+	var r= Math.floor(randomR(remainder)*255);
+	var g= Math.floor(randomG(remainder)*255); 
+	var b= Math.floor(randomB(remainder)*255);
+	return "rgb("+r+","+g+","+b+")";
+
+
+
+
+}
+
+var linePosition= 0;
+
+function step(timestamp) {
+		canvas= document.getElementById("myCanvas");
+
+	var ctx= canvas.getContext("2d");
+	canvas.width  = window.innerWidth;
+	canvas.height = window.innerHeight*0.9;
+	var height= canvas.height;
+	var width= canvas.width;
+	var rows= 36;
+	var columns= 36;
+	//console.log(linePosition%(width/columns));
+	if (linePosition>=width) {
+		linePosition=0;
+	}
+	if (Math.floor(linePosition%(width/columns))==0) {
+		var x= Math.floor(linePosition/(width/columns));
+		console.log(onOff[x], x, linePosition, width);
+		for (var i = 0; i < onOff[x].length; i++) {
+			var y=onOff[x][i];
+			if (y) {
+
+				playSound(i);
+			}
+		}
+
+		//playSound("D#5","8n")
+	}
+	linePosition++;
+
+
+	drawGrid(rows,columns,width, height, ctx, onOff);
+
+
+	window.requestAnimationFrame(step);
+
+}
+/*
+Bottom.prototype._playClicked = function(e) { e.preventDefault();
+ if (Transport.state === 'started') { this._playButton.classList.remove('Playing');
+  this._playButton.classList.add('icon-svg_play'); 
+ this._playButton.classList.remove('icon-svg_pause');
+  Transport.stop();
+   } else { this._playButton.classList.add('Playing'); 
+   this._playButton.classList.remove('icon-svg_play'); 
+   this._playButton.classList.add('icon-svg_pause');
+    Transport.start('+0.1'); } };
+*/
+
+
+
+function play() {
+
+	window.requestAnimationFrame(step);
+
+
+
+
+
+}
+//playSound("D6", "8n");
+
+function drawGrid(rows, columns, width, height, ctx, onOff) {
+	ctx.beginPath();
+	ctx.rect(0, 0, width, height);
+	ctx.fillStyle = "beige";
+	ctx.strokeStyle= "black";
+	ctx.fill();
+	for (var i = 0; i < rows+1; i++) {
+		var x1= 0;
+		var y1=height/rows*i;
+		var x2= width;
+		var y2= height/rows*i;
+		ctx.beginPath();
+		ctx.moveTo(x1,y1);
+		ctx.lineTo(x2,y2);
+		ctx.stroke();
+
+
+	}
+
+
+
+	for (var i = 0; i < columns+1; i++) {
+		var x1= width/columns*i;
+		var y1=0;
+		var x2= width/columns*i;
+		var y2= height;
+		ctx.beginPath();
+		ctx.moveTo(x1,y1);
+		ctx.lineTo(x2,y2);
+		ctx.stroke();
+
+
+
+
+		//if (true) {} 
+
+	}
+
+ 	for (var i = 0; i < columns; i++) {
+ 		for (var j = 0; j < rows; j++) {
+ 			var isOn= onOff[i][j];
+ 			var x1= width/columns*i;
+ 			var x2= width/columns;
+ 			var y1= height/rows*j;
+ 			var y2= height/rows;
+ 			if (isOn) {
+ 				ctx.beginPath();
+				ctx.rect(x1, y1, x2, y2);
+				ctx.fillStyle = colors(j);
+				ctx.fill();
+				//console.log(x1,y1,x2,y2,rows,columns,width,height);
+
+
+ 			}
+ 			
+
+ 		}
+ 
+	}
+
+	
+
+	ctx.beginPath();
+	ctx.moveTo(linePosition,0);
+	ctx.lineTo(linePosition, height);
+	ctx.strokeStyle= "blue";
+	ctx.stroke();
+
+}
+
+
+function clickConverter(x,y,height, width, rows, columns) {
+
+	var heightPerBox= height/rows;
+	var widthPerBox= width/columns;
+	var boxX= Math.floor(x/widthPerBox);
+	var boxY= Math.floor(y/heightPerBox);
+	console.log(boxX, boxY);
+
+	return [boxX,boxY];
+}
+
+
+
+
+
+
+</script>
+</body>
+</html>
